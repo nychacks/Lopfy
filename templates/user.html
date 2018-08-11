@@ -1,9 +1,9 @@
 {% extends 'base.html' %} {% load static %} {% block head %}
-<script src="http://d3js.org/d3.v4.js"></script>
+<script src="https://d3js.org/d3.v4.js"></script>
 <style>
     img {
-        max-width: 30em;
-        max-height: 30em;
+        max-width: 40em;
+        max-height: 40em;
     }
 
     rect.bordered {
@@ -50,11 +50,18 @@
         font-size: 16px;
         line-height: 20px;
     }
+    .profile{
+        border-radius: 50%
+    }
 </style>
 
-{% endblock %} {% block content %} {{ user.name }}
+{% endblock %} {% block content %} 
 
-<img src="{% static user.picture.url %}" height="100px">
+<div>
+    <h3>{{ user.name }}</h3>
+    <h5>{{ user.company }} - {{ user.role.name }}</h5>
+</div>
+<img class="profile" src="{% static user.picture.url %}" height="100px">
 
 
 <div id="chart"></div>
@@ -134,8 +141,8 @@
         cards.enter().append("rect")
             .on("mouseover", function (d) {
 
-                var xPosition = parseFloat(d3.select(this).attr("x")) + margin.left + gridSize;
-                var yPosition = parseFloat(d3.select(this).attr("y")) + margin.top + gridSize;
+                var xPosition = parseFloat(d3.select(this).attr("x")) + margin.left + gridSize + 30;
+                var yPosition = parseFloat(d3.select(this).attr("y")) + margin.top + gridSize + 100;
 
                 d3.select("#tooltip")
                     .style("left", xPosition + "px")

@@ -46,4 +46,4 @@ class Logs(models.Model):
     description = models.TextField()
     
     def __str__(self):
-        return self.description + ' ( ' + str(self.day) + ',' + str(self.hour) + ' )'
+        return self.mentor.name + ' - ' + self.description + ' ( ' + str(self.day) + ',' + str(self.hour) + ' )'

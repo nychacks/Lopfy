@@ -25,7 +25,10 @@ SECRET_KEY = '*@e4txf(1yh00l#9kd-ux4wu@cyh@f2e(n$4wrrd4bwes8)$%6'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'pello.serveo.net',
+    'localhost'
+]
 
 
 # Application definition
