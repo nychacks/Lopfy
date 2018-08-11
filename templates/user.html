@@ -1,0 +1,198 @@
+{% extends 'base.html' %} {% load static %} {% block head %}
+<script src="http://d3js.org/d3.v4.js"></script>
+<style>
+    img {
+        max-width: 30em;
+        max-height: 30em;
+    }
+
+    rect.bordered {
+        stroke: #E6E6E6;
+        stroke-width: 2px;
+    }
+
+    rect:hover {
+        stroke: rgb(255, 187, 0);
+    }
+
+    text.mono {
+        font-size: 9pt;
+        font-family: Consolas, courier;
+        fill: #aaa;
+    }
+
+    text.axis-workweek {
+        fill: #000;
+    }
+
+    text.axis-worktime {
+        fill: #000;
+    }
+
+    #tooltip {
+        position: absolute;
+        widows: auto;
+        height: auto;
+        padding: 5px;
+        background-color: white;
+        /* border-radius: 1em; */
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        pointer-events: none;
+    }
+
+    #tooltip.hidden {
+        display: none;
+    }
+
+    #tooltip p {
+        margin: 0;
+        font-family: Futura;
+        font-size: 16px;
+        line-height: 20px;
+    }
+</style>
+
+{% endblock %} {% block content %} {{ user.name }}
+
+<img src="{% static user.picture.url %}" height="100px">
+
+
+<div id="chart"></div>
+<div id="tooltip" class="hidden"></div>
+
+<script>
+    //adapted from http://bl.ocks.org/ganezasan/dfe585847d65d0742ca7d0d1913d50e1
+    const margin = {
+            top: 50,
+            right: 0,
+            bottom: 100,
+            left: 60
+        },
+        width = 600 - margin.left - margin.right,
+        height = 580 - margin.top - margin.bottom,
+        gridSize = Math.floor(width / 24),
+        legendElementWidth = gridSize * 2.8,
+        buckets = 9,
+        categories = {
+            "intense": "#DB504A",
+            "moderate": "#FF6F59",
+            "break": "#6F4E37",
+            "chill": "#43AA8B",
+            "off topic": "#254441"
+        }
+    days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+        times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12a", "1p", "2p", "3p",
+            "4p",
+            "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12p"
+        ];
+
+    const svg = d3.select("#chart").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    const dayLabels = svg.selectAll(".dayLabel")
+        .data(days)
+        .enter().append("text")
+        .text(function (d) {
+            return d;
+        })
+        .attr("y", 0)
+        .attr("x", (d, i) => i * gridSize)
+        .style("text-anchor", "middle")
+        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+        .attr("class", (d, i) => ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" :
+            "dayLabel mono axis"));
+
+    const timeLabels = svg.selectAll(".timeLabel")
+        .data(times)
+        .enter().append("text")
+        .text((d) => d)
+        .attr("y", (d, i) => i * gridSize)
+        .attr("x", 0)
+        .style("text-anchor", "end")
+        .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+        .attr("class", (d, i) => ((i >= 8 && i <= 16) ? "timeLabel mono axis axis-worktime" :
+            "timeLabel mono axis"));
+
+    const type = (d) => {
+        return {
+            day: +d.day,
+            hour: +d.hour,
+            value: +d.value
+        };
+    };
+
+    const heatmapChart = function (data) {
+
+        const cards = svg.selectAll(".hour")
+            .data(data, (d) => d.day + ':' + d.hour);
+
+        cards.append("title");
+
+        cards.enter().append("rect")
+            .on("mouseover", function (d) {
+
+                var xPosition = parseFloat(d3.select(this).attr("x")) + margin.left + gridSize;
+                var yPosition = parseFloat(d3.select(this).attr("y")) + margin.top + gridSize;
+
+                d3.select("#tooltip")
+                    .style("left", xPosition + "px")
+                    .style("top", yPosition + "px")
+                    .html(d.description);
+
+                d3.select("#tooltip").classed("hidden", false);
+
+            })
+            .on("mouseout", function () {
+                d3.select("#tooltip").classed("hidden", true);
+
+            })
+            .attr("x", (d) => (d.day - 1) * gridSize)
+            .attr("y", (d) => (d.hour - 1) * gridSize)
+            .attr("rx", 4)
+            .attr("ry", 4)
+            .attr("class", "hour bordered")
+            .attr("width", gridSize)
+            .attr("height", gridSize)
+            .style("fill", 'white')
+            .merge(cards)
+            .transition()
+            .duration(1000)
+            .style("fill", (d) => categories[d.category])
+
+        cards.select("title").text((d) => d.value);
+
+        cards.exit().remove();
+
+        const legend = svg.selectAll(".legend")
+            .data(Object.entries(categories));
+
+        const legend_g = legend.enter().append("g")
+            .attr("class", "legend");
+
+        legend_g.append("rect")
+            .attr("x", (d) => gridSize * days.length + 10)
+            .attr("y", (d, i) => gridSize * i)
+            .attr("width", legendElementWidth)
+            .attr("height", gridSize * 0.9)
+            .style("fill", (d, i) => d[1]);
+
+        legend_g.append("text")
+            .attr("class", "mono")
+            .text((d) => d[0])
+            .attr("x", (d) => gridSize * days.length + legendElementWidth + 12)
+            .attr("y", (d, i) => gridSize * i + 12);
+
+        legend.exit().remove();
+    };
+
+    
+
+    const formattedData = {{ formattedData | safe }}
+
+    heatmapChart(formattedData);
+</script>
+
+{% endblock %}

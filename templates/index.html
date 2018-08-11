@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+    .hidden{
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div id="fields"></div>
+
+<script>
+const data = {{ data | safe }} ;
+
+const FIELDSDIV = document.getElementById('fields');
+
+Object.keys(data).map(field => {
+    const fieldEl = document.createElement('div');
+    fieldEl.innerHTML = `<h3>${field}</h3>`
+    const mentors = data[field].map(mentor => {
+        const mentorEl = document.createElement('div');
+        mentorEl.innerHTML = `<a href="/user/${mentor.id}"> ${mentor.role} - ${mentor.name} </a>`
+        fieldEl.appendChild(mentorEl)
+        return mentorEl
+    })
+    fieldEl.addEventListener('click', () => {
+        mentors.map(mentor => mentor.classList.toggle('hidden'))
+    })
+    FIELDSDIV.appendChild(fieldEl)
+    return fieldEl
+})
+
+</script>
+
+{% endblock %}

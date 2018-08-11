@@ -1,0 +1,1 @@
+web: gunicorn lopfy.wsgi --log-file -
